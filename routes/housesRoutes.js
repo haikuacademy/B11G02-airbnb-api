@@ -3,6 +3,22 @@ import db from '../db.js'
 
 const router = Router()
 
+router.post('/houses', async (req, res) => {
+  const { location, price_per_night, bedroom, bathroom, description, user_id } =
+    req.body
+  const postQueryString = `
+  INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
+  VALUES ('${location}', ${price_per_night}, ${bedroom}, ${bathroom}, '${description}', ${user_id})
+  RETURNING * `
+  console.log(postQueryString)
+  try {
+    const { rows } = await db.query(postQueryString)
+    res.json(rows)
+  } catch (err) {
+    res.json({ error: err.message })
+  }
+})
+
 // route gets all the houses and if there is a query it gives the results of the query
 
 router.get('/houses', async (req, res) => {
