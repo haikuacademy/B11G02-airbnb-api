@@ -3,6 +3,8 @@ import db from '../db.js'
 
 const router = Router()
 
+// create Post request
+
 router.post('/houses', async (req, res) => {
   const { location, price_per_night, bedroom, bathroom, description, user_id } =
     req.body
