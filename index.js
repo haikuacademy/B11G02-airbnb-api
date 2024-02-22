@@ -1,7 +1,7 @@
 import express from 'express'
 import authRoute from './routes/authRoutes.js'
 import housesRoutes from './routes/housesRoutes.js'
-import usersRouter from './routes/usersRouter.js'
+import usersRoutes from './routes/usersRoutes.js'
 import bookingsRoute from './routes/bookingsRoutes.js'
 import reviewsRoutes from './routes/reviewsRoutes.js'
 import photosRouter from './routes/photosRoutes.js'
@@ -15,7 +15,7 @@ app.use(photosRouter)
 app.use(reviewsRoutes)
 app.use(bookingsRoute)
 app.use(housesRoutes)
-app.use(usersRouter)
+app.use(usersRoutes)
 app.use(authRoute)
 
 console.log('all good')
