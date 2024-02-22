@@ -17,10 +17,8 @@ router.post('/signup', async (req, res) => {
   const queryString = `INSERT INTO users (first_name, last_name, email, password)
   VALUES ('${newUser.first_name}', '${newUser.last_name}', '${newUser.email}', '${hashedPassword}')
   RETURNING first_name, last_name, email`
-
   try {
     const insertion = await db.query(queryString)
-
     res.json(insertion.rows[0])
   } catch (err) {
     res.json({ error: err.message })
@@ -29,16 +27,13 @@ router.post('/signup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { password, email } = req.body
-  console.log(email)
-  console.log(password)
-
-  const queryString = `SELECT * FROM users WHERE users.email = '${email}' AND users.password = '${password}'`
-
   try {
+    const queryString = `SELECT * FROM users WHERE users.email = '${email}'`
     const { rows } = await db.query(queryString)
-    if (rows.length === 0) {
-      throw new Error('User not found or password incorrect')
-    }
+    console.log(rows)
+    const isPasswordValid = await bcrypt.compare(password, rows[0].password)
+    console.log(isPasswordValid)
+
     res.json({ rows }.rows[0])
   } catch (err) {
     res.json({ error: err.message })
