@@ -1,4 +1,6 @@
 import express from 'express'
+import cookieParser from 'cookie-parser'
+
 import authRoute from './routes/authRoutes.js'
 import housesRoutes from './routes/housesRoutes.js'
 import usersRoutes from './routes/usersRoutes.js'
@@ -10,6 +12,7 @@ const app = express()
 
 //middleware
 app.use(express.json())
+app.use(cookieParser())
 
 app.use(photosRouter)
 app.use(reviewsRoutes)
