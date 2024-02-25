@@ -19,6 +19,12 @@ router.post('/houses', async (req, res) => {
     }
 
     //else if token does exist verify user_id from the token
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    if (!decodedToken) {
+      throw new Error('Invalid quthentication token')
+    }
+
     const { user_id } = jwt.verify(token, jwtSecret)
 
     const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
@@ -31,14 +37,9 @@ router.post('/houses', async (req, res) => {
       ${user_id}) 
       RETURNING *`
 
-    // console.log(queryString)
-
-    console.log(token)
-
     const { rows } = await db.query(queryString)
-    console.log(rows)
 
-    res.json(rows)
+    res.json(rows[0])
   } catch (err) {
     res.json({ error: err.message })
   }
@@ -104,11 +105,40 @@ router.get('/houses/:houseId', async (req, res) => {
 // patch houses route
 
 router.patch('/houses/:houseId', async (req, res) => {
-  let houseId = req.params.houseId
-  const { location, price_per_night, bedroom, bathroom, description, user_id } =
-    req.body
-  let patchQueryString = ` UPDATE houses`
   try {
+    const {
+      location,
+      price_per_night,
+      bedroom,
+      bathroom,
+      description,
+      user_id
+    } = req.body
+
+    let houseId = req.params.houseId
+
+    //declare the token from the jwt property in the cookie
+    let token = req.cookies.jwt
+
+    // if token doesn't exist throw error
+    if (!token) {
+      throw new Error('Invalid authentication token')
+    }
+
+    //else if token does exist verify user_id from the token
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    if (!decodedToken) {
+      throw new Error('Invalid authentication token')
+    }
+
+    console.log(decodedToken.user_id)
+
+    const userId = decodedToken.user_id
+
+    console.log('userId', userId)
+
+    let patchQueryString = ` UPDATE houses`
     if (
       location ||
       price_per_night ||
@@ -142,10 +172,17 @@ router.patch('/houses/:houseId', async (req, res) => {
     }
 
     const resQuery = await db.query(patchQueryString)
+
     const { rowCount, rows } = resQuery
+
     if (rowCount === 0) {
       throw new Error(`There is no house corresponding to this query.`)
     }
+
+    if (rows[0].user_id !== userId) {
+      throw new Error('You are not authorized')
+    }
+
     res.json(rows[0])
   } catch (err) {
     console.log(err.message)
