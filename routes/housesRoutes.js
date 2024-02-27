@@ -4,10 +4,17 @@ import db from '../db.js'
 const router = Router()
 
 router.post('/houses', async (req, res) => {
-  const { location, price_per_night, bedroom, bathroom, description, user_id } =
-    req.body
+  try {
+    const {
+      location,
+      price_per_night,
+      bedroom,
+      bathroom,
+      description,
+      user_id
+    } = req.body
 
-  const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
+    const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
   VALUES (
     '${location}',
     ${price_per_night},
@@ -16,13 +23,27 @@ router.post('/houses', async (req, res) => {
     '${description}',
     ${user_id})`
 
-  console.log(queryString)
+    const { rows } = await db.query(queryString)
 
-  try {
-    const insert = await db.query(queryString)
-    console.log(insert)
+    //req token from json web token
+    const token = req.cookies.jwt
 
-    res.json(insert)
+    if (!token) {
+      throw new Error('No token provided')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    // The request was made with an invalid jwt token in the cookies
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    // Else, the token is valid, the user is authenticated and can proceed
+    // with the rest of the operations in the route
+
+    res.json(rows[0])
   } catch (err) {
     res.json(err.message)
   }
