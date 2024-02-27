@@ -1,29 +1,14 @@
 import { Router } from 'express'
 import db from '../db.js'
+import jwt from 'jsonwebtoken'
+import { jwtSecret } from '../secrets.js'
 
 const router = Router()
 
 router.post('/houses', async (req, res) => {
   try {
-    const {
-      location,
-      price_per_night,
-      bedroom,
-      bathroom,
-      description,
-      user_id
-    } = req.body
-
-    const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
-  VALUES (
-    '${location}',
-    ${price_per_night},
-    ${bedroom},
-    ${bathroom},
-    '${description}',
-    ${user_id})`
-
-    const { rows } = await db.query(queryString)
+    const { location, price_per_night, bedroom, bathroom, description } =
+      req.body
 
     //req token from json web token
     const token = req.cookies.jwt
@@ -39,6 +24,19 @@ router.post('/houses', async (req, res) => {
     if (!decodedToken) {
       throw new Error('Invalid authorization token')
     }
+
+    const userId = decodedToken.user_id
+
+    const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
+  VALUES (
+    '${location}',
+    ${price_per_night},
+    ${bedroom},
+    ${bathroom},
+    '${description}',
+    ${userId})`
+
+    const { rows } = await db.query(queryString)
 
     // Else, the token is valid, the user is authenticated and can proceed
     // with the rest of the operations in the route
