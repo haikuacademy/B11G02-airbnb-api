@@ -42,9 +42,8 @@ router.post('/houses', async (req, res) => {
     console.log(queryString)
 
     const { rows } = await db.query(queryString)
-    console.log(rows)
 
-    res.json(rows)
+    res.json(rows[0])
   } catch (err) {
     res.json(err.message)
   }
