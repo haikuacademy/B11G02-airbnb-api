@@ -14,7 +14,7 @@ router.post('/houses', async (req, res) => {
     const token = req.cookies.jwt
 
     if (!token) {
-      throw new Error('No token provided')
+      throw new Error('Invalid authentication token')
     }
 
     const decodedToken = jwt.verify(token, jwtSecret)
@@ -24,6 +24,9 @@ router.post('/houses', async (req, res) => {
     if (!decodedToken) {
       throw new Error('Invalid authorization token')
     }
+
+    // Else, the token is valid, the user is authenticated and can proceed
+    // with the rest of the operations in the route
 
     const userId = decodedToken.user_id
 
@@ -36,12 +39,12 @@ router.post('/houses', async (req, res) => {
     '${description}',
     ${userId})`
 
+    console.log(queryString)
+
     const { rows } = await db.query(queryString)
+    console.log(rows)
 
-    // Else, the token is valid, the user is authenticated and can proceed
-    // with the rest of the operations in the route
-
-    res.json(rows[0])
+    res.json(rows)
   } catch (err) {
     res.json(err.message)
   }
