@@ -109,11 +109,33 @@ router.get('/houses/:houseId', async (req, res) => {
 // patch houses route
 
 router.patch('/houses/:houseId', async (req, res) => {
-  let houseId = req.params.houseId
-  const { location, price_per_night, bedroom, bathroom, description, user_id } =
-    req.body
-  let patchQueryString = ` UPDATE houses`
   try {
+    //req token from json web token
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Invalid authentication token')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    // The request was made with an invalid jwt token in the cookies
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    let houseId = req.params.houseId
+    const {
+      location,
+      price_per_night,
+      bedroom,
+      bathroom,
+      description,
+      user_id
+    } = req.body
+
+    let patchQueryString = ` UPDATE houses`
     if (
       location ||
       price_per_night ||
@@ -148,9 +170,17 @@ router.patch('/houses/:houseId', async (req, res) => {
 
     const resQuery = await db.query(patchQueryString)
     const { rowCount, rows } = resQuery
+
+    //if user_id from token is not thes same as user_id from the query then throw this error
+
+    if (rows[0].user_id !== decodedToken.user_id) {
+      throw new Error('You are not authorized')
+    }
+
     if (rowCount === 0) {
       throw new Error(`There is no house corresponding to this query.`)
     }
+
     res.json(rows[0])
   } catch (err) {
     console.log(err.message)
