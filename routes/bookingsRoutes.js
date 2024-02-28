@@ -95,17 +95,52 @@ router.get('/bookings/:bookingId', async (req, res) => {
     }
 
     const userId = decodedToken.user_id
+    console.log(userId)
 
     const { rows, rowCount } = await db.query(
-      `SELECT * FROM bookings WHERE booking_id = ${bookingId} AND user_id = ${userId} RETURNING *`
+      `SELECT * FROM bookings WHERE booking_id = ${bookingId} AND user_id = ${userId} `
     )
-    if (!rows.length) {
-      throw new Error(`The booking Id number ${bookingId} does not exist.`)
+
+    if (rowCount === 0) {
+      throw new Error(`You are not authorized`)
     }
     console.log(rows)
-    res.json(rows)
+    res.json(rows[0])
   } catch (err) {
     console.error(err.message)
+    res.json({ error: err.message })
+  }
+})
+
+router.delete('/bookings/:bookingId', async (req, res) => {
+  try {
+    let bookingId = req.params.bookingId
+
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Invalid authentication token. Please sign in')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    const userId = decodedToken.user_id
+    console.log(userId)
+
+    const { rows, rowCount } = await db.query(
+      `DELETE FROM bookings WHERE booking_id = ${bookingId} AND user_id = ${userId} RETURNING *`
+    )
+
+    if (rowCount === 0) {
+      throw new Error('You are not authorized')
+    }
+
+    res.json(`booking: ${bookingId} has been deleted`)
+  } catch (err) {
     res.json({ error: err.message })
   }
 })
