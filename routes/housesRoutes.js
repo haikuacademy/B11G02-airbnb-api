@@ -193,23 +193,23 @@ router.delete('/houses/:house_id', async (req, res) => {
     //req token from json web token
     const token = req.cookies.jwt
 
-    // if (!token) {
-    //   throw new Error('Invalid authentication token')
-    // }
+    if (!token) {
+      throw new Error('Token does not exist please sign in')
+    }
 
     const decodedToken = jwt.verify(token, jwtSecret)
 
     // The request was made with an invalid jwt token in the cookies
 
-    // if (!decodedToken) {
-    //   throw new Error('Invalid authorization token')
-    // }
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
 
-    const { rows } = await db.query(`
-    DELETE FROM houses WHERE house_id = ${req.params.house_id} AND user_id = ${decodedToken.user_id}
+    const { rows, rowCount, fields } = await db.query(`
+    DELETE FROM houses WHERE house_id = ${req.params.house_id} AND user_id = ${decodedToken.user_id} RETURNING *
     `)
 
-    if (!rows[0]) {
+    if (rowCount === 0) {
       throw new Error('You are not authorized')
     }
 
