@@ -15,7 +15,7 @@ router.post('/bookings', async (req, res) => {
     console.log(token)
 
     if (!token) {
-      throw new Error('No token. Please sign in')
+      throw new Error('Invalid authentication token. Please sign in')
     }
 
     const decodedToken = jwt.verify(token, jwtSecret)
@@ -43,10 +43,23 @@ router.post('/bookings', async (req, res) => {
 
 //routes to GET info from DATA BASE
 router.get('/bookings', async (req, res) => {
-  let userBooking = ''
-  let userId = req.query.user
-
   try {
+    let userBooking = ''
+
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Invalid authentication token. Please sign in')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    const userId = decodedToken.user_id
+
     if (userId) {
       userBooking = `SELECT * FROM bookings WHERE user_id = ${userId} ORDER BY check_in DESC`
     }
@@ -67,10 +80,24 @@ router.get('/bookings', async (req, res) => {
 
 // route to a specific house if with params
 router.get('/bookings/:bookingId', async (req, res) => {
-  let bookingId = req.params.bookingId
   try {
-    const { rows } = await db.query(
-      `SELECT * FROM bookings WHERE booking_id = ${bookingId}`
+    let bookingId = req.params.bookingId
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Invalid authentication token. Please sign in')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    const userId = decodedToken.user_id
+
+    const { rows, rowCount } = await db.query(
+      `SELECT * FROM bookings WHERE booking_id = ${bookingId} AND user_id = ${userId} RETURNING *`
     )
     if (!rows.length) {
       throw new Error(`The booking Id number ${bookingId} does not exist.`)
